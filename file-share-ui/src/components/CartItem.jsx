@@ -22,7 +22,7 @@ export default function CartItem({ onClick, file, handleRemove }) {
           e.stopPropagation();
           handleRemove(file.path);
         }}
-        className="md:opacity-0 md:group-hover:opacity-100 text-red-500 hover:text-red-600 transition"
+        className="md:opacity-0 md:group-hover:opacity-100 text-red-500 hover:text-red-600 transition cursor-pointer"
       >
         🗑
       </button>
