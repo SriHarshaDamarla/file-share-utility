@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import cors from "cors";
-import { addToCart, getCart } from "./cartStore.js";
+import { addToCart, getCart, removeFromCart } from "./cartStore.js";
 
 const app = express();
 dotenv.config();

@@ -26,7 +26,7 @@ function App() {
             <button
               onClick={() => navigate("/")}
               className={`relative z-10 flex-1 text-sm font-medium py-2 text-center
-              ${active === "server" ? "text-gray-900" : "text-gray-500"}
+              ${active === "server" ? "text-gray-900" : "text-gray-500 cursor-pointer"}
             `}
             >
               Server
@@ -36,7 +36,7 @@ function App() {
             <button
               onClick={() => navigate("/client")}
               className={`relative z-10 flex-1 text-sm font-medium py-2 text-center
-              ${active === "client" ? "text-gray-900" : "text-gray-500"}
+              ${active === "client" ? "text-gray-900" : "text-gray-500 cursor-pointer"}
             `}
             >
               Client

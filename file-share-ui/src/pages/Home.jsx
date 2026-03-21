@@ -8,7 +8,6 @@ export default function Home() {
   const [currentPath, setCurrentPath] = useState("");
   const [filesCart, setFilesCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
-  const isMobile = window.innerWidth < 768;
   const handleItemClick = (file) => {
     const filePath = currentPath ? `${currentPath}/${file.name}` : file.name;
     if (file.type === "folder") {
@@ -27,6 +26,18 @@ export default function Home() {
       }
     });
   };
+
+  const handleCartRemove = (filePath) => {
+    axios
+      .post("http://192.168.1.194:3000/cart/remove", { path: filePath })
+      .then((response) => {
+        const data = response.data;
+        if (!data.removed) {
+          alert("Failed to remove file from cart");
+        }
+      });
+  };
+
   useEffect(() => {
     axios
       .get("http://192.168.1.194:3000/files", {
@@ -102,7 +113,13 @@ export default function Home() {
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-2 max-h-content space-y-2">
           {filesCart.length > 0 ? (
-            filesCart.map((file) => <CartItem key={file.path} file={file} />)
+            filesCart.map((file) => (
+              <CartItem
+                key={file.path}
+                file={file}
+                handleRemove={handleCartRemove}
+              />
+            ))
           ) : (
             <p className="text-sm text-gray-400 text-center mt-10 animate-pulse">
               No files selected
@@ -119,14 +136,20 @@ export default function Home() {
       >
         {/* Header */}
         <div className="p-4 border-b flex justify-between items-center">
-          <span className="font-semibold">File Cart</span>
+          <span className="font-semibold text-gray-800">File Cart</span>
           <button onClick={() => setShowCart(false)}>✕</button>
         </div>
 
         {/* Content */}
         <div className="overflow-y-auto p-3 space-y-2">
           {filesCart.length > 0 ? (
-            filesCart.map((file) => <CartItem key={file.path} file={file} />)
+            filesCart.map((file) => (
+              <CartItem
+                key={file.path}
+                file={file}
+                handleRemove={handleCartRemove}
+              />
+            ))
           ) : (
             <p className="text-sm text-gray-400 text-center mt-10 animate-pulse">
               No files selected

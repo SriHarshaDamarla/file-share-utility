@@ -49,7 +49,7 @@ export default function Client() {
     <div className="bg-white rounded-xl shadow h-full flex flex-col overflow-hidden">
       <div className="p-3 border-b font-semibold flex items-center justify-between">
         <span>Available Files ({files.length})</span>
-        <span>
+        <span className="hidden md:block">
           Connected to <span className="text-green-700">{address}</span>
         </span>
       </div>
