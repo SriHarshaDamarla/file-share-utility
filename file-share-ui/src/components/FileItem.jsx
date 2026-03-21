@@ -5,7 +5,7 @@ export default function FileItem({ onClick, file }) {
       className={`
         flex items-center justify-between p-3 rounded-xl cursor-pointer 
         border border-transparent 
-        hover:border-gray-200 hover:bg-gray-50 
+        hover:border-gray-200 hover:bg-gray-100 
         active:scale-[0.98]
         transition-all duration-150
       `}
