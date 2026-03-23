@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import FileItem from "../components/FileItem";
 import axios from "axios";
 import CartItem from "../components/CartItem";
+import { ShoppingCart } from "lucide-react";
+import { BASE_URL, WS_URL } from "../constants/constants";
 
 export default function Home() {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
   const [filesCart, setFilesCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [loading, setLoading] = useState(false);
   const handleItemClick = (file) => {
     const filePath = currentPath ? `${currentPath}/${file.name}` : file.name;
     if (file.type === "folder") {
-      file.name === "<- Back"
+      file.name === "-- Back"
         ? setCurrentPath(currentPath.split("/").slice(0, -1).join("/"))
         : setCurrentPath(filePath);
     } else {
@@ -19,39 +22,45 @@ export default function Home() {
     }
   };
   const handleCartAdd = (file) => {
-    axios.post("http://192.168.1.194:3000/cart/add", file).then((response) => {
+    setLoading(true);
+    axios.post(`${BASE_URL}/cart/add`, file).then((response) => {
       const data = response.data;
       if (!data.added) {
         alert("File already in cart");
       }
+      setLoading(false);
     });
   };
 
   const handleCartRemove = (filePath) => {
+    setLoading(true);
     axios
-      .post("http://192.168.1.194:3000/cart/remove", { path: filePath })
+      .post(`${BASE_URL}/cart/remove`, { path: filePath })
       .then((response) => {
         const data = response.data;
         if (!data.removed) {
           alert("Failed to remove file from cart");
         }
+        setLoading(false);
       });
   };
 
   useEffect(() => {
+    setLoading(true);
     axios
-      .get("http://192.168.1.194:3000/files", {
+      .get(`${BASE_URL}/files`, {
         params: { path: currentPath },
       })
       .then((response) => {
         const data = response.data;
-        currentPath !== "" && data.unshift({ name: "<- Back", type: "folder" });
+        currentPath !== "" && data.unshift({ name: "-- Back", type: "folder" });
         setFiles(response.data);
+        setLoading(false);
       });
   }, [currentPath]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://192.168.1.194:3000");
+    const ws = new WebSocket(WS_URL);
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
@@ -76,7 +85,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col md:flex-row h-full items-start">
-      <div className="w-full md:w-2/3 bg-white rounded-2xl p-4 shadow-md h-full flex flex-col">
+      <div className="w-full md:w-2/3 bg-white rounded-2xl p-4 shadow-sm h-full flex flex-col border border-gray-200">
         <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b shadow-sm">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center justify-between">
             Files
@@ -88,7 +97,7 @@ export default function Home() {
                 onClick={() => setShowCart(true)}
                 className="relative bg-white shadow rounded-full p-2"
               >
-                🛒
+                <ShoppingCart className="w-5 h-5 text-gray-700" />
                 {filesCart.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full px-1">
                     {filesCart.length}
@@ -104,7 +113,7 @@ export default function Home() {
           ))}
         </div>
       </div>
-      <div className="w-full md:w-1/3 bg-white rounded-2xl p-4 shadow-md md:ml-4 mt-4 md:mt-0 md:flex flex-col hidden">
+      <div className="w-full md:w-1/3 bg-white rounded-2xl p-4 shadow-sm md:ml-4 mt-4 md:mt-0 md:flex flex-col hidden border border-gray-200 transition">
         <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b shadow-sm">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center justify-between">
             File Cart
@@ -130,7 +139,7 @@ export default function Home() {
       <div
         className={`
           fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white z-50
-          shadow-lg transform transition-transform duration-300 md:hidden
+          shadow-lg transform transition-transform duration-300 md:hidden ease-out
           ${showCart ? "translate-x-0" : "translate-x-full"}
         `}
       >
@@ -162,6 +171,11 @@ export default function Home() {
           className="fixed inset-0 bg-black/20 z-40"
           onClick={() => setShowCart(false)}
         />
+      )}
+      {loading && (
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-500 border-t-transparent"></div>
+        </div>
       )}
     </div>
   );
