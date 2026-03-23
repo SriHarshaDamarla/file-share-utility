@@ -13,10 +13,10 @@ export default function FileItem({ onClick, file }) {
         animate-fade-in
       `}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 overflow-hidden">
         <div
           className={`
-          w-9 h-9 flex items-center justify-center rounded-xl
+          w-9 h-9 flex items-center justify-center rounded-xl flex-shrink-0
           ${file.type === "folder" ? "bg-green-100" : "bg-gray-100"}
         `}
         >
@@ -26,7 +26,7 @@ export default function FileItem({ onClick, file }) {
             <File className="text-gray-500 w-5 h-5" />
           )}
         </div>
-        <span className="text-sm font-medium text-gray-800 truncate line-clamp-1">
+        <span className="text-sm font-medium text-gray-800 max-w-[800px] truncate">
           {file.name}
         </span>
       </div>
