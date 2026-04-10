@@ -2,7 +2,7 @@ import { Router } from "express";
 import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
-import { requireClientAuth, requireHostAuth } from "../middleware/auth";
+import { requireClientAuth, requireHostAuth } from "../middleware/auth.js";
 
 const router = Router();
 const pathLib = path;

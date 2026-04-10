@@ -1,4 +1,4 @@
-import { getSession } from "../store/sessionStore";
+import { getSession } from "../store/sessionStore.js";
 
 export function requireHostAuth(req, res, next) {
   processAuth(req, res, next, "server");
