@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { addToCart, removeFromCart } from "../store/cartStore.js";
 import { broadcast } from "../websocket/handler.js";
+import { requireHostAuth } from "../middleware/auth.js";
 
 const router = Router();
+
+router.use(requireHostAuth);
 
 router.post("/add", (req, res) => {
   const file = req.body;

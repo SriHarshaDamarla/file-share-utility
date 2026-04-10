@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cartRouter from "./routes/cart.js";
 import fileRouter from "./routes/files.js";
+import authRouter from "./routes/auth.js";
 import { initWebSocketServer, wss } from "./websocket/handler.js";
 
 const app = express();
@@ -19,5 +20,5 @@ const server = app.listen(port, () => {
 initWebSocketServer(server);
 
 app.use("/", fileRouter);
-
+app.use("/auth", authRouter);
 app.use("/cart", cartRouter);
