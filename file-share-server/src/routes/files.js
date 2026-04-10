@@ -2,11 +2,12 @@ import { Router } from "express";
 import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
+import { requireClientAuth, requireHostAuth } from "../middleware/auth";
 
 const router = Router();
 const pathLib = path;
 
-router.get("/files", async (req, res) => {
+router.get("/files", requireHostAuth, async (req, res) => {
   try {
     const reqPath = req.query.path || "";
     const basePath = process.env.BASE_FILE_PATH;
@@ -36,7 +37,7 @@ router.get("/files", async (req, res) => {
   }
 });
 
-router.get("/download", async (req, res) => {
+router.get("/download", requireClientAuth, async (req, res) => {
   try {
     const reqPath = req.query.path;
     const basePath = process.env.BASE_FILE_PATH;
