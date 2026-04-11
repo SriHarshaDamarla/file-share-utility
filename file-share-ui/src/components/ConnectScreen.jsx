@@ -1,4 +1,11 @@
-function ConnectScreen({ address, setAddress, onConnect }) {
+function ConnectScreen({
+  address,
+  setAddress,
+  username,
+  setUsername,
+  onConnect,
+  errorMsg,
+}) {
   return (
     <div className="h-full flex items-center justify-center">
       <div className="bg-white p-6 rounded-xl shadow w-full max-w-sm">
@@ -7,6 +14,12 @@ function ConnectScreen({ address, setAddress, onConnect }) {
         </h2>
 
         <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Username"
+          className="w-full border rounded-lg p-2 mb-4"
+        />
+        <input
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="192.168.1.10:3000"
@@ -14,11 +27,12 @@ function ConnectScreen({ address, setAddress, onConnect }) {
         />
 
         <button
-          onClick={() => onConnect(address)}
+          onClick={() => onConnect(address, username)}
           className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600"
         >
           Connect
         </button>
+        {errorMsg && <p className="text-red-500 mt-2">{errorMsg}</p>}
       </div>
     </div>
   );

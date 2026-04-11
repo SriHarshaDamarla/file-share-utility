@@ -3,14 +3,21 @@ import ConnectScreen from "../components/ConnectScreen";
 
 export default function Client() {
   const [files, setFiles] = useState([]);
-  const [ws, setWs] = useState(null);
   const [connected, setConnected] = useState(false);
   const [address, setAddress] = useState("");
+  const [username, setUsername] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const connect = (address) => {
+  const connect = (address, username) => {
     const socket = new WebSocket(`ws://${address}`);
 
     socket.onopen = () => {
+      socket.send(
+        JSON.stringify({
+          type: "JOIN_REQUEST",
+          data: { clientName: username },
+        }),
+      );
       setConnected(true);
       console.log("Connected to server");
     };
@@ -29,14 +36,18 @@ export default function Client() {
       if (msg.type === "REMOVEFILE") {
         setFiles((prev) => prev.filter((item) => item.path !== msg.data.path));
       }
+
+      if (msg.type === "JOIN_RESPONSE") {
+        if (!msg.data.accepted) {
+          setErrorMsg(msg.data.message || "Could not join session");
+        }
+      }
     };
 
     socket.onclose = () => {
       setConnected(false);
       console.log("Disconnected from server");
     };
-
-    setWs(socket);
   };
 
   return !connected ? (
@@ -44,6 +55,9 @@ export default function Client() {
       onConnect={connect}
       address={address}
       setAddress={setAddress}
+      username={username}
+      setUsername={setUsername}
+      errorMsg={errorMsg}
     />
   ) : (
     <div className="bg-white rounded-xl shadow h-full flex flex-col overflow-hidden">

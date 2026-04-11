@@ -1,6 +1,7 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Client from "./pages/Client";
+import ModalWindow from "./components/ModalWindow";
 
 function App() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ function App() {
           <Route path="/client" element={<Client />} />
         </Routes>
       </div>
+      <ModalWindow />
     </div>
   );
 }

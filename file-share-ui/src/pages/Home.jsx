@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import FileItem from "../components/FileItem";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import CartItem from "../components/CartItem";
-import { ShoppingCart } from "lucide-react";
 import { BASE_URL, WS_URL } from "../constants/constants";
+import HostScreen from "../components/HostScreen";
+import LoginScreen from "../components/LoginScreen";
+import { hideModalWithoutCallback, showModal } from "../modal/modal";
 
 export default function Home() {
   const [files, setFiles] = useState([]);
@@ -11,6 +11,21 @@ export default function Home() {
   const [filesCart, setFilesCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const wsRef = useRef(null);
+
+  const handleLogout = () => {
+    axios.post(
+      `${BASE_URL}/auth/logout`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${sessionId}` },
+      },
+    );
+    wsRef.current?.close();
+    setSessionId(null);
+  };
+
   const handleItemClick = (file) => {
     const filePath = currentPath ? `${currentPath}/${file.name}` : file.name;
     if (file.type === "folder") {
@@ -21,35 +36,50 @@ export default function Home() {
       handleCartAdd({ ...file, path: filePath });
     }
   };
+
   const handleCartAdd = (file) => {
     setLoading(true);
-    axios.post(`${BASE_URL}/cart/add`, file).then((response) => {
-      const data = response.data;
-      if (!data.added) {
-        alert("File already in cart");
-      }
-      setLoading(false);
-    });
+    axios
+      .post(`${BASE_URL}/cart/add`, file, {
+        headers: { Authorization: `Bearer ${sessionId}` },
+      })
+      .then((response) => {
+        const data = response.data;
+        if (!data.added) {
+          showModal("Cart Alert", "File is already in the cart", "OK");
+        }
+        setLoading(false);
+      });
   };
 
   const handleCartRemove = (filePath) => {
     setLoading(true);
     axios
-      .post(`${BASE_URL}/cart/remove`, { path: filePath })
+      .post(
+        `${BASE_URL}/cart/remove`,
+        { path: filePath },
+        {
+          headers: { Authorization: `Bearer ${sessionId}` },
+        },
+      )
       .then((response) => {
         const data = response.data;
         if (!data.removed) {
-          alert("Failed to remove file from cart");
+          showModal("Cart Error", "Failed to remove file from cart", "OK");
         }
         setLoading(false);
       });
   };
 
   useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
     setLoading(true);
     axios
       .get(`${BASE_URL}/files`, {
         params: { path: currentPath },
+        headers: { Authorization: `Bearer ${sessionId}` },
       })
       .then((response) => {
         const data = response.data;
@@ -57,10 +87,24 @@ export default function Home() {
         setFiles(response.data);
         setLoading(false);
       });
-  }, [currentPath]);
+  }, [currentPath, sessionId]);
 
   useEffect(() => {
+    if (!sessionId) {
+      return;
+    }
+
     const ws = new WebSocket(WS_URL);
+
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "AUTH_REQUEST", data: { sessionId } }));
+    };
+
+    ws.onclose = () => {
+      setSessionId(null);
+    };
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
@@ -78,105 +122,62 @@ export default function Home() {
           prev.filter((item) => item.path !== msg.data.path),
         );
       }
+
+      if (msg.type === "JOIN_REQUEST") {
+        const clientName = msg.data.clientName;
+        const clientSessionId = msg.data.clientSessionId;
+        showModal(
+          "Client Join Request",
+          `${clientName}, wants to join your session. Allow?`,
+          "Deny",
+          "Allow",
+          () => {
+            ws.send(
+              JSON.stringify({
+                type: "JOIN_RESPONSE",
+                data: {
+                  accepted: true,
+                  clientSessionId,
+                  serverSessionId: sessionId,
+                },
+              }),
+            );
+          },
+          () => {
+            ws.send(
+              JSON.stringify({
+                type: "JOIN_RESPONSE",
+                data: {
+                  accepted: false,
+                  clientSessionId,
+                  serverSessionId: sessionId,
+                },
+              }),
+            );
+          },
+        );
+      }
+
+      if (msg.type === "JOIN_RESPONSE") {
+        hideModalWithoutCallback();
+      }
     };
 
     return () => ws.close();
-  }, []);
+  }, [sessionId]);
 
-  return (
-    <div className="flex flex-col md:flex-row h-full items-start">
-      <div className="w-full md:w-2/3 bg-white rounded-2xl p-4 shadow-sm h-full flex flex-col border border-gray-200">
-        <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-800 flex items-center justify-between">
-            Files
-            <span className="text-sm text-gray-400 hidden md:block">
-              {files.length}
-            </span>
-            <div className="md:hidden">
-              <button
-                onClick={() => setShowCart(true)}
-                className="relative bg-white shadow rounded-full p-2"
-              >
-                <ShoppingCart className="w-5 h-5 text-gray-700" />
-                {filesCart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full px-1">
-                    {filesCart.length}
-                  </span>
-                )}
-              </button>
-            </div>
-          </h2>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-2">
-          {files.map((file) => (
-            <FileItem key={file.name} file={file} onClick={handleItemClick} />
-          ))}
-        </div>
-      </div>
-      <div className="w-full md:w-1/3 bg-white rounded-2xl p-4 shadow-sm md:ml-4 mt-4 md:mt-0 md:flex flex-col hidden border border-gray-200 transition">
-        <div className="sticky top-0 bg-white z-10 px-4 py-2 border-b shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-800 flex items-center justify-between">
-            File Cart
-            <span className="text-sm text-gray-400">{filesCart.length}</span>
-          </h2>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-2 max-h-content space-y-2">
-          {filesCart.length > 0 ? (
-            filesCart.map((file) => (
-              <CartItem
-                key={file.path}
-                file={file}
-                handleRemove={handleCartRemove}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-400 text-center mt-10 animate-pulse">
-              No files selected
-            </p>
-          )}
-        </div>
-      </div>
-      <div
-        className={`
-          fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white z-50
-          shadow-lg transform transition-transform duration-300 md:hidden ease-out
-          ${showCart ? "translate-x-0" : "translate-x-full"}
-        `}
-      >
-        {/* Header */}
-        <div className="p-4 border-b flex justify-between items-center">
-          <span className="font-semibold text-gray-800">File Cart</span>
-          <button onClick={() => setShowCart(false)}>✕</button>
-        </div>
-
-        {/* Content */}
-        <div className="overflow-y-auto p-3 space-y-2">
-          {filesCart.length > 0 ? (
-            filesCart.map((file) => (
-              <CartItem
-                key={file.path}
-                file={file}
-                handleRemove={handleCartRemove}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-400 text-center mt-10 animate-pulse">
-              No files selected
-            </p>
-          )}
-        </div>
-      </div>
-      {showCart && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40"
-          onClick={() => setShowCart(false)}
-        />
-      )}
-      {loading && (
-        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-500 border-t-transparent"></div>
-        </div>
-      )}
-    </div>
+  return sessionId != null ? (
+    <HostScreen
+      files={files}
+      filesCart={filesCart}
+      setShowCart={setShowCart}
+      showCart={showCart}
+      handleItemClick={handleItemClick}
+      handleCartRemove={handleCartRemove}
+      handleLogout={handleLogout}
+      loading={loading}
+    />
+  ) : (
+    <LoginScreen onLogin={setSessionId} />
   );
 }
