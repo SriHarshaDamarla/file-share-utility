@@ -47,15 +47,19 @@ function processServerInitiation(ws, sessionId) {
     ws.isAuthenticated = true;
     ws.sessionId = sessionId;
     ws.connectionType = "server";
-    ws.send(
-      JSON.stringify({
-        type: "FULLSNAP",
-        data: getCart(),
-      }),
-    );
+    sendCartSnapshot(ws);
   } else {
     ws.close();
   }
+}
+
+function sendCartSnapshot(ws) {
+  ws.send(
+    JSON.stringify({
+      type: "FULLSNAP",
+      data: getCart(),
+    }),
+  );
 }
 
 function sendClientJoinRequestToServers(ws, clientName) {
@@ -114,6 +118,7 @@ function processJoinResponse(clientSessionId, serverSessionId, accepted) {
               },
             }),
           );
+          sendCartSnapshot(client);
           client.isAuthenticated = true;
         } else {
           deleteSession(clientSessionId, "client");
