@@ -7,6 +7,7 @@ export default function Client() {
   const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [waiting, setWaiting] = useState(false);
 
   const connect = (address, username) => {
     const socket = new WebSocket(`ws://${address}`);
@@ -19,6 +20,7 @@ export default function Client() {
         }),
       );
       setConnected(true);
+      setWaiting(true);
       console.log("Connected to server");
     };
 
@@ -39,13 +41,16 @@ export default function Client() {
 
       if (msg.type === "JOIN_RESPONSE") {
         if (!msg.data.accepted) {
+          setConnected(false);
           setErrorMsg(msg.data.message || "Could not join session");
         }
+        setWaiting(false);
       }
     };
 
     socket.onclose = () => {
       setConnected(false);
+      setWaiting(false);
       console.log("Disconnected from server");
     };
   };
@@ -61,6 +66,22 @@ export default function Client() {
     />
   ) : (
     <div className="bg-white rounded-xl shadow h-full flex flex-col overflow-hidden">
+      {returnContent(waiting, files, address)}
+    </div>
+  );
+}
+
+function returnContent(isWaiting, files, address) {
+  if (isWaiting) {
+    return (
+      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-500 border-t-transparent mb-4"></div>
+        <span className="text-gray-700">Waiting for host response...</span>
+      </div>
+    );
+  }
+  return (
+    <>
       <div className="p-3 border-b font-semibold flex items-center justify-between">
         <span>Available Files ({files.length})</span>
         <span className="hidden md:block">
@@ -79,6 +100,6 @@ export default function Client() {
           </a>
         ))}
       </div>
-    </div>
+    </>
   );
 }

@@ -108,16 +108,16 @@ function processJoinResponse(clientSessionId, serverSessionId, accepted) {
         client.connectionType === "client" &&
         client.clientSessionId === clientSessionId
       ) {
+        client.send(
+          JSON.stringify({
+            type: "JOIN_RESPONSE",
+            data: {
+              serverSessionId,
+              accepted,
+            },
+          }),
+        );
         if (accepted) {
-          client.send(
-            JSON.stringify({
-              type: "JOIN_RESPONSE",
-              data: {
-                serverSessionId,
-                accepted,
-              },
-            }),
-          );
           sendCartSnapshot(client);
           client.isAuthenticated = true;
         } else {

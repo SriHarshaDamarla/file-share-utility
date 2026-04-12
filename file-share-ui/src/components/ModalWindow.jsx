@@ -22,9 +22,9 @@ export default function ModalWindow() {
 
   return (
     <div
-      className={`h-full w-full fixed inset-0 bg-black/20 z-150 ${showModal ? "flex" : "hidden"} justify-center items-center`}
+      className={`h-full w-full fixed inset-0 bg-black/20 z-150 flex ${showModal ? "opacity-100" : "opacity-0 pointer-events-none"} justify-center items-center transition-opacity duration-300`}
     >
-      <div className="w-full max-w-lg flex justify-center items-center h-full">
+      <div className="w-full max-w-lg flex justify-center items-center h-full p-2">
         <div className="bg-white rounded-lg p-6 shadow-lg w-full">
           <h2 className="text-lg font-semibold mb-4">{title}</h2>
           <p className="text-sm text-gray-600">{content}</p>
@@ -39,7 +39,7 @@ export default function ModalWindow() {
             )}
             <button
               onClick={() => hideModal()}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 cursor-pointer"
             >
               {closeText}
             </button>

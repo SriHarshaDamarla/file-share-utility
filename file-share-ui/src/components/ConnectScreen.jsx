@@ -32,7 +32,9 @@ function ConnectScreen({
         >
           Connect
         </button>
-        {errorMsg && <p className="text-red-500 mt-2">{errorMsg}</p>}
+        {errorMsg && (
+          <p className="text-red-500 mt-2 text-center">{errorMsg}</p>
+        )}
       </div>
     </div>
   );
