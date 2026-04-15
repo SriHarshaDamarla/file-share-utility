@@ -8,6 +8,7 @@ export default function Client() {
   const [username, setUsername] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [waiting, setWaiting] = useState(false);
+  const [token, setToken] = useState("");
 
   const connect = (address, username) => {
     const socket = new WebSocket(`ws://${address}`);
@@ -43,6 +44,8 @@ export default function Client() {
         if (!msg.data.accepted) {
           setConnected(false);
           setErrorMsg(msg.data.message || "Could not join session");
+        } else {
+          setToken(msg.data.clientSessionId);
         }
         setWaiting(false);
       }
@@ -66,12 +69,12 @@ export default function Client() {
     />
   ) : (
     <div className="bg-white rounded-xl shadow h-full flex flex-col overflow-hidden">
-      {returnContent(waiting, files, address)}
+      {returnContent(waiting, files, address, token)}
     </div>
   );
 }
 
-function returnContent(isWaiting, files, address) {
+function returnContent(isWaiting, files, address, token) {
   if (isWaiting) {
     return (
       <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -93,7 +96,7 @@ function returnContent(isWaiting, files, address) {
         {files.map((file) => (
           <a
             key={file.path}
-            href={`http://${address}/download?path=${encodeURIComponent(file.path)}`}
+            href={`http://${address}/download?path=${encodeURIComponent(file.path)}&token=${token}`}
             className="block p-3 rounded-lg hover:bg-gray-100"
           >
             {file.name}

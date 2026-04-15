@@ -112,6 +112,7 @@ function processJoinResponse(clientSessionId, serverSessionId, accepted) {
           JSON.stringify({
             type: "JOIN_RESPONSE",
             data: {
+              clientSessionId,
               serverSessionId,
               accepted,
             },
